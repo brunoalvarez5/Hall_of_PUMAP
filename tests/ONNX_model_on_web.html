@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONNX Model in Browser</title>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+</head>
+<body>
+    <h1>ONNX Model in Browser</h1>
+    <input type="file" id="fileInput" accept=".csv">
+    <button onclick="runModel()">Run Model</button>
+    <p>Output: <span id="output"></span></p>
+
+    <script>
+        async function runModel() {
+            console.log("Starting model execution...");
+            const fileInput = document.getElementById('fileInput').files[0];
+            if (!fileInput) {
+                alert("Please select a CSV file.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                try {
+                    console.log("File loaded successfully.");
+                    const csvData = event.target.result
+                        .trim()
+                        .split("\n")
+                        .map(row => row.split(",").map(Number));
+
+                    console.log("Parsed CSV data:", csvData);
+
+                    // Skip the header row
+                    const dataRows = csvData.slice(1);
+                    const session = await ort.InferenceSession.create("pumap_model_tester.onnx");
+                    console.log("Model loaded successfully.");
+
+                    const inputName = session.inputNames[0];
+                    let resultsArray = [];
+
+                    for (let i = 0; i < dataRows.length; i++) {
+                        if (dataRows[i].length !== 32) {
+                            console.error(`Row ${i + 1} has ${dataRows[i].length} values instead of 32.`);
+                            alert(`Row ${i + 1} has ${dataRows[i].length} values instead of 32.`);
+                            continue;
+                        }
+                        
+                        const inputTensor = new ort.Tensor("float32", new Float32Array(dataRows[i]), [1, 32]);
+                        const results = await session.run({ [inputName]: inputTensor });
+                        const outputValues = Object.values(results).flatMap(output => output.data);
+                        resultsArray.push(outputValues);
+                    }
+
+                    console.log("Inference results:", resultsArray);
+                    document.getElementById("output").innerText = JSON.stringify(resultsArray);
+                    
+                    downloadResults(resultsArray);
+                } catch (error) {
+                    console.error("Error during model execution:", error);
+                    alert("An error occurred: " + error.message);
+                }
+            };
+            reader.readAsText(fileInput);
+        }
+
+        function downloadResults(resultsArray) {
+            let csvContent = "0,1\n";
+            resultsArray.forEach(row => {
+                csvContent += row.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: "text/csv" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "model_output_ONNX_web_Using_source_code.csv";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
