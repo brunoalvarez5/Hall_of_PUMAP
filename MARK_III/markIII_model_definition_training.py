@@ -38,11 +38,40 @@ embedding_data_1 = embedder_X.transform(tensors)
 
 #Now embedding_new has the processed values, so we will save it in a .csv file
 #print(embedding_new)
-df_result = pd.DataFrame(embedding_new)
+df_result = pd.DataFrame(embedding_data_1)
 df_result.to_csv("/home/bruno/ESCI/TFG/parametric_UMAP_code/MARK_III/Mark_III_training_results.csv", index = False)
 
 
-#now we are going to save the project in ONNX
-path = "/home/bruno/ESCI/TFG/parametric_UMAP_code/MARK_II/Mark_III_model.onnx"
+import tensorflow as tf
+import tf2onnx
 
-embedder_X.to_ONNX(path)
+#get the encoder of the model?
+encoder_model = embedder_X.encoder
+
+# Build model with flexible batch size
+encoder_model.build(input_shape=(None, tensors.shape[1]))
+
+
+from tensorflow.keras import Model, Input
+
+# Define new input layer
+inputs = Input(shape=(tensors.shape[1],), name="input")
+# Pass input through the sequential model
+outputs = encoder_model(inputs)
+# Build a functional model
+functional_encoder = Model(inputs, outputs)
+
+
+
+#convert keras model to ONNX
+spec = (tf.TensorSpec((None, tensors.shape[1]), tf.float32, name="input"),)
+
+output_path = "/home/bruno/ESCI/TFG/parametric_UMAP_code/MARK_III/Mark_III_model.onnx"
+
+model_proto, _ = tf2onnx.convert.from_keras(
+    functional_encoder, 
+    input_signature=spec, 
+    output_path=output_path, 
+    opset=13,
+)
+

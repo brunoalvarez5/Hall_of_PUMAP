@@ -21,7 +21,7 @@ train_embeddings = pd.read_csv(path)
 
 
 
-# Visualizar los embeddings (opcional)
+#visualizar los embeddings (opcional)
 plt.figure(figsize=(8,6))
 sns.scatterplot(x='Dim1', y='Dim2', data=train_embeddings, s=10)
 plt.title(f'Embeddings 2D - {name}')
@@ -30,7 +30,7 @@ plt.ylabel("Dim2")
 plt.show()
 
 
-# Aplicar clustering con K-Means
+#aplicar clustering con K-Means
 num_clusters = 5  # Ajusta este número según lo que consideres adecuado
 kmeans = KMeans(n_clusters=num_clusters, random_state=42)
 train_embeddings['Cluster'] = kmeans.fit_predict(train_embeddings[['Dim1', 'Dim2']])
