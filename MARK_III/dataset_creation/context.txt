@@ -1,1 +1,0 @@
-basically I take the SIMS encoder and real data, pass the real data through the SIMS encoder and save the 32d embedding to use as training data for my PUMAP model.
