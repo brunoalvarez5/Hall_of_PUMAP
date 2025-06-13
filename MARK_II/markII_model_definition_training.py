@@ -18,7 +18,7 @@ from sklearn.preprocessing import StandardScaler
 #lets load it 
 import numpy as np
 # Load the .npy file
-data = np.load("/home/bruno/ESCI/TFG/parametric_UMAP_code/MARK_II/sample-encodings.npy")
+data = np.load("./sample-encodings.npy")
 
 # Now 'data' is a NumPy array, similar to loading a CSV
 print(data)
@@ -48,7 +48,7 @@ embedding_new = embedder_X.transform(tensors)
 #Now embedding_new has the processed values, so we will save it in a .csv file
 #print(embedding_new)
 df_result = pd.DataFrame(embedding_new)
-df_result.to_csv("/home/bruno/ESCI/TFG/parametric_UMAP_code/MARK_II/Mark_II_results.csv", index = False)
+df_result.to_csv("./Mark_II_results.csv", index = False)
 
 import tensorflow as tf
 import tf2onnx
@@ -74,7 +74,7 @@ functional_encoder = Model(inputs, outputs)
 #convert keras model to ONNX
 spec = (tf.TensorSpec((None, tensors.shape[1]), tf.float32, name="input"),)
 
-output_path = "/home/bruno/ESCI/TFG/parametric_UMAP_code/MARK_II/Mark_II_model.onnx"
+output_path = "./Mark_II_model.onnx"
 
 model_proto, _ = tf2onnx.convert.from_keras(
     functional_encoder, 
